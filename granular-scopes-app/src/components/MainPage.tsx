@@ -36,7 +36,8 @@ import { CommonProps } from '../models/CommonProps';
 
 export interface MainPageProps {}
 
-const _appId:string = 'smart_granular_app';
+const _appId:string = process.env.REACT_APP_CLIENT_ID || 'smart_granular_app';
+const _redirectUri:string|undefined = process.env.REACT_APP_REDIRECT_URL || undefined;
 
 const _statusAvailable: DataCardStatus = {available: true, complete: false, busy: false};
 // const _statusNotAvailable: DataCardStatus = {available: false, complete: false, busy: false};
@@ -221,7 +222,7 @@ export default function MainPage() {
       client_id: _appId,
       scope: scopeString,
       iss: aud,
-      redirect_uri: process.env.REACT_APP_REDIRECT_URL || undefined
+      redirect_uri: _redirectUri
     });
   }
 
