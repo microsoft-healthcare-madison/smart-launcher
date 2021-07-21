@@ -281,29 +281,29 @@ for(const FHIR_VERSION in TESTED_FHIR_SERVERS) {
                 agent.get(`${PATH_FHIR}/Patient`)
                 .then((res) => {
                     if (!Array.isArray(res.body.link)) {
-                        throw new Error("No links found");
+                        done(new Error("No links found"));
                     }
         
                     let next = res.body.link.find(l => l.relation == "next")
                     if (!next) {
-                        throw new Error("No next link found");
+                        return done(new Error("No next link found"));
                     }
                   request("").get(next.url).then((res) => {
                         if (!Array.isArray(res.body.link)) {
-                            throw new Error("No links found on second page");
+                            return done(new Error("No links found on second page"));
                         }
         
                         let self = res.body.link.find(l => l.relation == "self")
                         if (!self) {
-                            throw new Error("No self link found on second page");
+                            return done(new Error("No self link found on second page"));
                         }
                         if (self.url !== next.url) {
-                            throw new Error("Links mismatch");
+                            return done(new Error("Links mismatch"));
                         }
         
                         let next2 = res.body.link.find(l => l.relation == "next")
                         if (!next2) {
-                            throw new Error("No next link found on second page");
+                            return done(new Error("No next link found on second page"));
                         }
                         done();
                     })
