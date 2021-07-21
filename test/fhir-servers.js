@@ -8,6 +8,9 @@ const config     = require("../src/config")
 const Lib        = require("../src/lib")
 
 const agent = request(app);
+after(function(){
+  app.close(); // logic to stop server so mocha process can end
+});
 
 const TESTED_FHIR_SERVERS = {
     "r4": config.fhirServerR4,
@@ -208,7 +211,7 @@ for(const FHIR_VERSION in TESTED_FHIR_SERVERS) {
         })
 
         describe('Proxy', function() {
-            this.timeout(10000);
+            this.timeout(4000);
 
             it("rejects unknown fhir versions", async () => {
                 await agent.get(`${PATH_FHIR.replace(/\/v\/r\d\//, "/v/r123/")}/Patient`)
@@ -273,9 +276,10 @@ for(const FHIR_VERSION in TESTED_FHIR_SERVERS) {
                 expect(resource.id).to.equal(patientID)
             });
 
-            it ("Handles pagination", () => {
-                return agent.get(`${PATH_FHIR}/Patient`)
-                .expect(res => {
+            it ("Handles pagination", (done) => {
+
+                agent.get(`${PATH_FHIR}/Patient`)
+                .then((res) => {
                     if (!Array.isArray(res.body.link)) {
                         throw new Error("No links found");
                     }
@@ -284,8 +288,7 @@ for(const FHIR_VERSION in TESTED_FHIR_SERVERS) {
                     if (!next) {
                         throw new Error("No next link found");
                     }
-                    // console.log(next)
-                    return agent.get(next.url).expect(res2 => {
+                  request("").get(next.url).then((res) => {
                         if (!Array.isArray(res.body.link)) {
                             throw new Error("No links found on second page");
                         }
@@ -302,7 +305,7 @@ for(const FHIR_VERSION in TESTED_FHIR_SERVERS) {
                         if (!next2) {
                             throw new Error("No next link found on second page");
                         }
-                        // console.log(next2)
+                        done();
                     })
                 })
             });
@@ -374,13 +377,6 @@ for(const FHIR_VERSION in TESTED_FHIR_SERVERS) {
                 .expect(401, "test error");
             });
 
-            it ("Keeps protected data-sets read-only");
-            it ("Make urls conditional and if exists, change /id to ?_id=");
-            it ("Apply patient scope to GET requests");
-
-            describe('Fhir Requests', () => {
-                it ("TODO...");
-            });
         });
 
         describe('Auth', () => {

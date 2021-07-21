@@ -94,8 +94,9 @@ app.use(globalErrorHandler);
 
 // Start the server if ran directly (tests import it and start it manually)
 /* istanbul ignore if */
-if (require.main?.filename === __filename) {
-    app.listen(config.port, () => {
+
+let server;
+    server = app.listen(config.port, () => {
         console.log(`SMART launcher listening on port ${config.port}!`)
     });
 
@@ -107,7 +108,7 @@ if (require.main?.filename === __filename) {
             if (err) {
                 throw err
             }
-            require("https").createServer({
+            server = require("https").createServer({
                 key : keys.serviceKey,
                 cert: keys.certificate
             }, app).listen(process.env.SSL_PORT, () => {
@@ -115,6 +116,6 @@ if (require.main?.filename === __filename) {
             });
         });
     }
-}
 
+app.close = server.close.bind(server);
 module.exports = app;
