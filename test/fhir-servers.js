@@ -276,38 +276,26 @@ for(const FHIR_VERSION in TESTED_FHIR_SERVERS) {
                 expect(resource.id).to.equal(patientID)
             });
 
-            it ("Handles pagination", (done) => {
+            it ("Handles pagination", async () => {
 
-                agent.get(`${PATH_FHIR}/Patient`)
-                .then((res) => {
-                    if (!Array.isArray(res.body.link)) {
-                        throw new Error("No links found");
-                    }
-        
-                    let next = res.body.link.find(l => l.relation == "next")
-                    if (!next) {
-                        throw new Error("No next link found");
-                    }
-                  request("").get(next.url).then((res) => {
-                        if (!Array.isArray(res.body.link)) {
-                            throw new Error("No links found on second page");
-                        }
-        
-                        let self = res.body.link.find(l => l.relation == "self")
-                        if (!self) {
-                            throw new Error("No self link found on second page");
-                        }
-                        if (self.url !== next.url + "BAd") {
-                            throw new Error("Links mismatch");
-                        }
-        
-                        let next2 = res.body.link.find(l => l.relation == "next")
-                        if (!next2) {
-                            throw new Error("No next link found on second page");
-                        }
-                        done();
-                    })
-                }).catch(done);
+                let res = await agent.get(`${PATH_FHIR}/Patient`);
+
+                expect(res.body.link).to.be.an('array', 'No links found');
+
+                let next = res.body.link.find(l => l.relation == "next")
+                expect(next, "No next link found").to.exist;
+
+                let res2 = await request("").get(next.url);
+
+
+                expect(res2.body.link).to.be.an("array", "No links found on second page");
+
+                let self = res2.body.link.find(l => l.relation == "self")
+                expect(self, "No self link found on second page").to.exist;
+                expect(self.url).to.equal(next.url, "Links mismatch");
+
+                let next2 = res2.body.link.find(l => l.relation == "next")
+                expect(next2, "No next link found on second page").to.exist;
             });
 
             it ("Replies with formatted JSON for bundles", () => {
